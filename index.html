@@ -1,183 +1,298 @@
 <!DOCTYPE html>
+
 <html lang="zh">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>簡易貪吃蛇遊戲（觸控版）</title>
-<style>
-  body {
-    background: #222;
-    color: #eee;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin: 0;
-    height: 100vh;
-    justify-content: center;
-  }
-  canvas {
-    background: #000;
-    display: block;
-    margin: 20px auto;
-    border: 2px solid #0f0;
-  }
-  h1 {
-    margin: 0;
-  }
-  #score {
-    font-size: 1.2em;
-    margin-top: 10px;
-  }
-</style>
+
+  <meta charset="UTF-8" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+
+  <title>貪吃蛇 Snake Game</title>
+
+  <style>
+
+    html, body {
+
+      margin: 0;
+
+      padding: 0;
+
+      background: #111;
+
+      color: #eee;
+
+      font-family: sans-serif;
+
+      text-align: center;
+
+      overflow: hidden;
+
+    }
+
+    h1 {
+
+      margin-top: 10px;
+
+    }
+
+    canvas {
+
+      border: 3px solid #0f0;
+
+      background: black;
+
+      display: block;
+
+      margin: 10px auto;
+
+    }
+
+    #score {
+
+      font-size: 18px;
+
+    }
+
+  </style>
+
 </head>
+
 <body>
-<h1>簡易貪吃蛇</h1>
-<canvas id="game" width="400" height="400"></canvas>
-<div id="score">分數: 0</div>
 
-<script>
-  const canvas = document.getElementById('game');
-  const ctx = canvas.getContext('2d');
-  const gridSize = 20;
-  const tileCount = canvas.width / gridSize;
+  <h1>🐍 貪吃蛇 Snake Game</h1>
 
-  let snake = [{x: 10, y: 10}];
-  let velocityX = 1; // 一開始向右移動
-  let velocityY = 0;
-  let food = {x: 15, y: 15};
-  let score = 0;
-  let gameOver = false;
+  <canvas id="game" width="400" height="400"></canvas>
 
-  function gameLoop() {
-    if (gameOver) {
-      alert('遊戲結束！你的分數是：' + score);
-      document.location.reload();
-      return;
-    }
-    update();
-    draw();
-  }
+  <div id="score">分數: 0</div>
 
-  function update() {
-    let head = {x: snake[0].x + velocityX, y: snake[0].y + velocityY};
 
-    // 邊界檢查
-    if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
-      gameOver = true;
-      return;
-    }
+  <script>
 
-    // 身體碰撞檢查
-    for (let segment of snake) {
-      if (segment.x === head.x && segment.y === head.y) {
-        gameOver = true;
-        return;
-      }
-    }
+    const canvas = document.getElementById('game');
 
-    snake.unshift(head);
+    const ctx = canvas.getContext('2d');
 
-    if (head.x === food.x && head.y === food.y) {
-      score++;
-      placeFood();
-      document.getElementById('score').innerText = '分數: ' + score;
-    } else {
-      snake.pop();
-    }
-  }
+    const gridSize = 20;
 
-  function draw() {
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const tileCount = canvas.width / gridSize;
 
-    ctx.fillStyle = '#f00';
-    ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize, gridSize);
 
-    ctx.fillStyle = '#0f0';
-    for (let segment of snake) {
-      ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize-2, gridSize-2);
-    }
-  }
+    let snake = [{x: 10, y: 10}];
 
-  function placeFood() {
-    let newFoodPos;
-    while (true) {
-      newFoodPos = {
-        x: Math.floor(Math.random() * tileCount),
-        y: Math.floor(Math.random() * tileCount)
-      };
-      let conflict = snake.some(segment => segment.x === newFoodPos.x && segment.y === newFoodPos.y);
-      if (!conflict) break;
-    }
-    food = newFoodPos;
-  }
+    let velocityX = 1;
 
-  window.addEventListener('keydown', e => {
-    switch (e.key) {
-      case 'ArrowUp':
-        if (velocityY !== 1) {
-          velocityX = 0;
-          velocityY = -1;
-        }
-        break;
-      case 'ArrowDown':
-        if (velocityY !== -1) {
-          velocityX = 0;
-          velocityY = 1;
-        }
-        break;
-      case 'ArrowLeft':
-        if (velocityX !== 1) {
-          velocityX = -1;
-          velocityY = 0;
-        }
-        break;
-      case 'ArrowRight':
-        if (velocityX !== -1) {
-          velocityX = 1;
-          velocityY = 0;
-        }
-        break;
-    }
-  });
+    let velocityY = 0;
 
-  // 觸控滑動控制
-  let touchStartX = 0;
-  let touchStartY = 0;
+    let food = {x: 15, y: 15};
 
-  window.addEventListener('touchstart', e => {
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-  });
+    let score = 0;
 
-  window.addEventListener('touchend', e => {
-    let touchEndX = e.changedTouches[0].clientX;
-    let touchEndY = e.changedTouches[0].clientY;
+    let gameOver = false;
 
-    let diffX = touchEndX - touchStartX;
-    let diffY = touchEndY - touchStartY;
 
-    if (Math.abs(diffX) > Math.abs(diffY)) {
-      if (diffX > 30 && velocityX !== -1) {
-        velocityX = 1;
-        velocityY = 0;
-      } else if (diffX < -30 && velocityX !== 1) {
-        velocityX = -1;
-        velocityY = 0;
-      }
-    } else {
-      if (diffY > 30 && velocityY !== -1) {
-        velocityX = 0;
-        velocityY = 1;
-      } else if (diffY < -30 && velocityY !== 1) {
-        velocityX = 0;
-        velocityY = -1;
-      }
-    }
-  });
+    function gameLoop() {
 
-  setInterval(gameLoop, 100);
-</script>
+      if (gameOver) {
+
+        alert("遊戲結束！你的分數是：" + score);
+
+        document.location.reload();
+
+        return;
+
+      }
+
+
+      update();
+
+      draw();
+
+    }
+
+
+    function update() {
+
+      let head = {
+
+        x: (snake[0].x + velocityX + tileCount) % tileCount,
+
+        y: (snake[0].y + velocityY + tileCount) % tileCount
+
+      };
+
+
+      for (let segment of snake) {
+
+        if (segment.x === head.x && segment.y === head.y) {
+
+          gameOver = true;
+
+          return;
+
+        }
+
+      }
+
+
+      snake.unshift(head);
+
+
+      if (head.x === food.x && head.y === food.y) {
+
+        score++;
+
+        document.getElementById("score").textContent = "分數: " + score;
+
+        placeFood();
+
+      } else {
+
+        snake.pop();
+
+      }
+
+    }
+
+
+    function draw() {
+
+      ctx.fillStyle = "black";
+
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+
+      ctx.fillStyle = "red";
+
+      ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize, gridSize);
+
+
+      ctx.fillStyle = "lime";
+
+      for (let segment of snake) {
+
+        ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize - 2, gridSize - 2);
+
+      }
+
+    }
+
+
+    function placeFood() {
+
+      let newFood;
+
+      while (true) {
+
+        newFood = {
+
+          x: Math.floor(Math.random() * tileCount),
+
+          y: Math.floor(Math.random() * tileCount)
+
+        };
+
+        let conflict = snake.some(segment => segment.x === newFood.x && segment.y === newFood.y);
+
+        if (!conflict) break;
+
+      }
+
+      food = newFood;
+
+    }
+
+
+    window.addEventListener("keydown", (e) => {
+
+      switch (e.key) {
+
+        case "ArrowUp":
+
+          if (velocityY !== 1) { velocityX = 0; velocityY = -1; }
+
+          break;
+
+        case "ArrowDown":
+
+          if (velocityY !== -1) { velocityX = 0; velocityY = 1; }
+
+          break;
+
+        case "ArrowLeft":
+
+          if (velocityX !== 1) { velocityX = -1; velocityY = 0; }
+
+          break;
+
+        case "ArrowRight":
+
+          if (velocityX !== -1) { velocityX = 1; velocityY = 0; }
+
+          break;
+
+      }
+
+    });
+
+
+    // 手機觸控滑動支援
+
+    let touchStartX = 0;
+
+    let touchStartY = 0;
+
+
+    window.addEventListener("touchstart", (e) => {
+
+      touchStartX = e.touches[0].clientX;
+
+      touchStartY = e.touches[0].clientY;
+
+    });
+
+
+    window.addEventListener("touchend", (e) => {
+
+      const dx = e.changedTouches[0].clientX - touchStartX;
+
+      const dy = e.changedTouches[0].clientY - touchStartY;
+
+
+      if (Math.abs(dx) > Math.abs(dy)) {
+
+        if (dx > 30 && velocityX !== -1) {
+
+          velocityX = 1; velocityY = 0;
+
+        } else if (dx < -30 && velocityX !== 1) {
+
+          velocityX = -1; velocityY = 0;
+
+        }
+
+      } else {
+
+        if (dy > 30 && velocityY !== -1) {
+
+          velocityX = 0; velocityY = 1;
+
+        } else if (dy < -30 && velocityY !== 1) {
+
+          velocityX = 0; velocityY = -1;
+
+        }
+
+      }
+
+    });
+
+
+    setInterval(gameLoop, 100);
+
+  </script>
+
 </body>
+
 </html>
+
